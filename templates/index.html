@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Approval Prediction</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px 15px;
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #263247;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: auto;
+            padding: 30px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            text-align: center;
+            color: #234b91;
+        }
+
+        .description {
+            margin-bottom: 25px;
+            text-align: center;
+            color: #667085;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd4e0;
+            border-radius: 7px;
+            font-size: 15px;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: 2px solid #b6cdfb;
+            border-color: #3973d6;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .predict-btn {
+            background: #2859a8;
+            color: white;
+        }
+
+        .predict-btn:hover {
+            background: #1d4485;
+        }
+
+        .clear-btn {
+            background: #e9edf4;
+            color: #344054;
+        }
+
+        .clear-btn:hover {
+            background: #dce3ed;
+        }
+
+        .result,
+        .error {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            overflow-wrap: anywhere;
+        }
+
+        .result {
+            background: #e8f7ed;
+            color: #176534;
+        }
+
+        .error {
+            background: #fff0f0;
+            color: #b42318;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 560px) {
+            .container {
+                padding: 22px 17px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Loan Approval Prediction</h1>
+
+        <p class="description">
+            Enter the applicant's details to predict loan approval status.
+        </p>
+
+        <form id="loanForm" action="/predict" method="POST">
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label for="no_of_dependents">Number of Dependents</label>
+                    <input
+                        type="number"
+                        id="no_of_dependents"
+                        name="no_of_dependents"
+                        min="0"
+                        step="1"
+                        value="{{ request.form.get('no_of_dependents', '') }}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="education">Education</label>
+                    <select id="education" name="education" required>
+                        <option value="">Select education</option>
+                        <option value="Graduate"
+                            {% if request.form.get('education') == 'Graduate' %}selected{% endif %}>
+                            Graduate
+                        </option>
+                        <option value="Not Graduate"
+                            {% if request.form.get('education') == 'Not Graduate' %}selected{% endif %}>
+                            Not Graduate
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="self_employed">Self Employed</label>
+                    <select id="self_employed" name="self_employed" required>
+                        <option value="">Select an option</option>
+                        <option value="Yes"
+                            {% if request.form.get('self_employed') == 'Yes' %}selected{% endif %}>
+                            Yes
+                        </option>
+                        <option value="No"
+                            {% if request.form.get('self_employed') == 'No' %}selected{% endif %}>
+                            No
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="income_annum">Annual Income</label>
+                    <input
+                        type="number"
+                        id="income_annum"
+                        name="income_annum"
+                        min="0"
+                        step="any"
+                        value="{{ request.form.get('income_annum', '') }}"
+                        required
+                    >
+                    <small> In Nepalese Rupees.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="loan_amount">Loan Amount</label>
+                    <input
+                        type="number"
+                        id="loan_amount"
+                        name="loan_amount"
+                        min="0"
+                        step="any"
+                        value="{{ request.form.get('loan_amount', '') }}"
+                        required
+                    >
+                    <small> In Nepalese Rupees.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="loan_term">Loan Term</label>
+                    <input
+                        type="number"
+                        id="loan_term"
+                        name="loan_term"
+                        min="1"
+                        step="any"
+                        value="{{ request.form.get('loan_term', '') }}"
+                        required
+                    >
+                    <small> In Years.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="cibil_score">CIBIL Score</label>
+                    <input
+                        type="number"
+                        id="cibil_score"
+                        name="cibil_score"
+                        min="0"
+                        max="900"
+                        step="1"
+                        value="{{ request.form.get('cibil_score', '') }}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="Total_asset_value">Total Asset Value</label>
+                    <input
+                        type="number"
+                        id="Total_asset_value"
+                        name="Total_asset_value"
+                        min="0"
+                        step="any"
+                        value="{{ request.form.get('Total_asset_value', '') }}"
+                        required
+                    >
+                    <small>
+                        In Nepalese Rupees.
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="buttons">
+                <button type="submit" class="predict-btn">
+                    Predict Loan Status
+                </button>
+
+                <button type="button" id="clearFormBtn" class="clear-btn">
+                    Clear Form
+                </button>
+            </div>
+        </form>
+
+        {% if prediction_text %}
+        <div class="result" id="predictionResult">
+            <strong>{{ prediction_text }}</strong>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="error" id="errorMessage">
+            <strong>{{ error }}</strong>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        const loanForm = document.getElementById("loanForm");
+        const clearFormBtn = document.getElementById("clearFormBtn");
+
+        clearFormBtn.addEventListener("click", function () {
+            // Clear all input fields and dropdowns.
+            loanForm.reset();
+
+            loanForm.querySelectorAll("input").forEach(function (input) {
+                input.value = "";
+            });
+
+            loanForm.querySelectorAll("select").forEach(function (select) {
+                select.selectedIndex = 0;
+            });
+
+            // Remove previously displayed prediction or error.
+            document.querySelectorAll(
+                "#predictionResult, #errorMessage, .result, .error"
+            ).forEach(function (element) {
+                element.remove();
+            });
+        });
+    </script>
+</body>
+</html>
